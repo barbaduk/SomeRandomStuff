@@ -3,42 +3,45 @@
 
 ComObjError(false)
 whr := ComObjCreate("WinHttp.WinHttpRequest.5.1")
-;Берём ссылку на docx из моего гитхаба (Если она изменится на сайте, достаточно будет мне опубликовать новую, а не править код)
+;Р‘РµСЂС‘Рј СЃСЃС‹Р»РєСѓ РЅР° docx РёР· РјРѕРµРіРѕ РіРёС‚С…Р°Р±Р° (Р•СЃР»Рё РѕРЅР° РёР·РјРµРЅРёС‚СЃСЏ РЅР° СЃР°Р№С‚Рµ, РґРѕСЃС‚Р°С‚РѕС‡РЅРѕ Р±СѓРґРµС‚ РјРЅРµ РѕРїСѓР±Р»РёРєРѕРІР°С‚СЊ РЅРѕРІСѓСЋ, Р° РЅРµ РїСЂР°РІРёС‚СЊ РєРѕРґ).
 whr.Open("GET", "https://github.com/barbaduk/SomeRandomStuff/raw/master/FSEM-link", true)
 whr.Send()
 whr.WaitForResponse()
 fsemlink := StrReplace(whr.ResponseText, "`n")
-whr.Open("GET", fsemlink)
-whr.Send()
-whr.WaitForResponse()
-checkfile := whr.ResponseText
-;Проверка ссылки перед скачкой. Если файла по ссылке нет, то в ответ придёт ошибка, содержащая "html".
-IfNotInString, checkfile, html
+;РљРѕРїРёСЂСѓРµС‚ СЃР°Рј СЃРµР±СЏ РІ РїР°РїРєСѓ "C:\users\public\FSEM Updater\" (Р•СЃР»Рё С„Р°Р№Р» Рё РїР°РїРєР° СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓСЋС‚, С‚Рѕ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰РµРµ РґРµР№СЃС‚РІРёРµ РїСЂРѕРїСѓСЃРєР°РµС‚СЃСЏ).
+;Р­С‚Рѕ РЅСѓР¶РЅРѕ, С‡С‚РѕР±С‹ РџР»Р°РЅРёСЂРѕРІС‰РёРє РЅРµ СЃСЃС‹Р»Р°Р»СЃСЏ РЅР° С‚РѕС‚ С„Р°Р№Р», РєРѕС‚РѕСЂС‹Р№ Р±С‹Р» РёР·РЅР°С‡Р°Р»СЊРЅРѕ Р·Р°РїСѓС‰РµРЅ (РІРґСЂСѓРі РµРіРѕ СѓРґР°Р»СЏС‚), Р° С‚Р°Рє РјРѕР¶РЅРѕ РїСЂРѕСЃС‚Рѕ СЃ С„Р»РµС€РєРё "СѓСЃС‚Р°РЅРѕРІРёС‚СЊ".
+;РўР°РєРѕР№ РїСѓС‚СЊ РІС‹Р±СЂР°Р», РїРѕС‚РѕРјСѓ С‡С‚Рѕ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ РЅРµ РЅСѓР¶РЅС‹ РїСЂР°РІР° Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂР° + РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ С‚СѓРґР° РІСЂСЏРґ Р»Рё РїРѕР»РµР·РµС‚.
+fldr = %public%\FSEM Updater\
+If !FileExist(fldr)
+	FileCreateDir, %fldr%
+If !FileExist(fldr A_ScriptName)
+	FileCopy, %A_ScriptFullPath%, %fldr%
+If !FileExist(fldr "Custom folder.ini")
+	FileAppend, , %fldr%Custom folder.ini
+;Р•СЃР»Рё РІ РџР»Р°РЅРёСЂРѕРІС‰РёРєРµ РЅРµС‚ Р·Р°РґР°С‡Рё СЃ РёРјРµРЅРµРј "FSEM Updater", С‚Рѕ СЃРѕР·РґР°С‘Рј РµС‘ (СЃРѕРѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕ, РѕС‚СЂР°Р±Р°С‚С‹РІР°РµС‚ С‚РѕР»СЊРєРѕ РїСЂРё РїРµСЂРІРѕРј Р·Р°РїСѓСЃРєРµ).
+RunWait, %A_WinDir%\System32\schtasks.exe /TN "FSEM Updater", , UseErrorLevel
+if ErrorLevel
+	Run, powershell -Command "$t = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Tue -At "13:00" -WeeksInterval 2;$o = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun;$a = New-ScheduledTaskAction -Execute "'%fldr%%A_ScriptName%'";Register-ScheduledTask -TaskName 'FSEM Updater' -Trigger $t -Settings $o -Action $a", , hide
+;РЎРѕР±СЃС‚РІРµРЅРЅРѕ СЃР°РјРѕ СЃРєР°С‡РёРІР°РЅРёРµ. РўР°Рє Р¶Рµ РµСЃС‚СЊ С„СѓРЅРєС†РёСЏ СЃРєР°С‡РёРІР°РЅРёСЏ РЅРµ РЅР° СЂР°Р±РѕС‡РёР№ СЃС‚РѕР», РµСЃР»Рё РІ С„Р°Р№Р»Рµ "%public%\FSEM Updater\Custom folder.ini" РїСЂРѕРїРёСЃР°С‚СЊ РїСѓС‚СЊ Рє РґСЂСѓРіРѕР№ РїР°РїРєРµ.
+;РџСѓС‚СЊ РїСЂРѕРїРёСЃС‹РІР°С‚СЊ Р±РµР· РєРѕРІС‹С‡РµРє Рё РїСЂРѕС‡РµРіРѕ, РїСЂРѕСЃС‚Рѕ C:\folder\folder2\ Р Р°Р±РѕС‚Р°РµС‚ С‚РѕР»СЊРєРѕ, РµСЃР»Рё С‚Р°РєР°СЏ РїР°РїРєР° СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚, РёРЅР°С‡Рµ РєР°С‡Р°РµС‚ РЅР° СЂР°Р±РѕС‡РёР№ СЃС‚РѕР» (РіРґРµ РµРјСѓ СЃР°РјРѕРµ РјРµСЃС‚Рѕ, РјРЅРµ РєР°Р¶РµС‚СЃСЏ, Р° С‚Рѕ РїРѕС‚РµСЂСЏСЋС‚ РµС‰С‘).
+inipath = %fldr%Custom folder.ini
+FileReadLine, customfldr, %inipath%, 1
+If FileExist(customfldr)
 {
-;Копирует сам себя в папку "C:\users\public\FSEM Updater\" (Если файл и папка уже существуют, то соответствующее действие пропускается).
-;Это нужно, чтобы Планировщик не ссылался на тот файл, который был изначально запущен (вдруг его удалят), а так можно просто с флешки "установить".
-;Такой путь выбрал, потому что для копирования не нужны права администратора + пользователь туда вряд ли полезет.
-	fldr = %public%\FSEM Updater\
-	If !FileExist(fldr)
-		FileCreateDir, %fldr%
-	If !FileExist(fldr A_ScriptName)
-		FileCopy, %A_ScriptFullPath%, %fldr%
-	If !FileExist(fldr "Custom folder.ini")
-		FileAppend, , %fldr%Custom folder.ini
-;Если в Планировщике нет задачи с именем "FSEM Updater", то создаём её (соответственно, отрабатывает только при первом запуске)
-	RunWait, %A_WinDir%\System32\schtasks.exe /TN "FSEM Updater", , UseErrorLevel
-	if ErrorLevel
-		Run, powershell -Command "$t = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Tue -At "13:00" -WeeksInterval 2;$o = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun;$a = New-ScheduledTaskAction -Execute "'%fldr%%A_ScriptName%'";Register-ScheduledTask -TaskName 'FSEM Updater' -Trigger $t -Settings $o -Action $a", , hide
-;Собственно само скачивание. Так же есть функция скачивания не на рабочий стол, если в файле "...\FSEM Updater\Custom folder.ini" прописать путь к другой папке.
-;Путь прописывать без ковычек и прочего, просто C:\folder\folder2\ Работает только, если такая папка уже существует, иначе качает на рабочий стол (где ему самое место, мне кажется, а то потеряют ещё).
-	inipath = %fldr%Custom folder.ini
-	FileReadLine, customfldr, %inipath%, 1
-	If FileExist(customfldr)
-		UrlDownloadToFile, %fsemlink%, %customfldr%\ФСЭМ.docx
-	else
+;РЎРєР°С‡РёРІР°РµРј РІ "%public%\FSEM Updater\" Рё РїСЂРѕРІРµСЂСЏРµРј, РµСЃР»Рё С„Р°Р№Р» СЃРѕРґРµСЂР¶РёС‚ "!DOCTYPE html", С‚Рѕ СЌС‚Рѕ РЅРµ РЅР°С€ docx, Р° СЃС‚СЂР°РЅРёС†Р° СЃ РѕС€РёР±РєРѕР№.
+	UrlDownloadToFile, %fsemlink%, %fldr%\FileCheck.SAO
+	FileRead, checkfile, %fldr%\FileCheck.SAO
+	IfNotInString, checkfile, !DOCTYPE html
+		FileMove, %fldr%\FileCheck.SAO, %customfldr%\Р¤РЎР­Рњ.docx, 1
+}
+else
+{
+	UrlDownloadToFile, %fsemlink%, %fldr%\FileCheck.SAO
+	FileRead, checkfile, %fldr%\FileCheck.SAO
+	IfNotInString, checkfile, !DOCTYPE html
 	{
-		If !FileExist(USERPROFILE "\Desktop\ФСЭМ\")
-			FileCreateDir, %USERPROFILE%\Desktop\ФСЭМ\
-		UrlDownloadToFile, %fsemlink%, %USERPROFILE%\Desktop\ФСЭМ\ФСЭМ.docx
+		If !FileExist(A_Desktop "\Р¤РЎР­Рњ\")
+			FileCreateDir, %USERPROFILE%\Desktop\Р¤РЎР­Рњ\
+		FileMove, %fldr%\FileCheck.SAO, %USERPROFILE%\Desktop\Р¤РЎР­Рњ\Р¤РЎР­Рњ.docx, 1
 	}
 }
