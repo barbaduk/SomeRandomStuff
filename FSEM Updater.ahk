@@ -19,29 +19,22 @@ If !FileExist(fldr A_ScriptName)
 If !FileExist(fldr "Custom folder.ini")
 	FileAppend, , %fldr%Custom folder.ini
 ;Если в Планировщике нет задачи с именем "FSEM Updater", то создаём её (соответственно, отрабатывает только при первом запуске).
-RunWait, %A_WinDir%\System32\schtasks.exe /TN "FSEM Updater", , UseErrorLevel
+RunWait, %A_WinDir%\System32\schtasks.exe /TN "FSEM Updater", , hide UseErrorLevel
 if ErrorLevel
 	Run, powershell -Command "$t = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Tue -At "13:00" -WeeksInterval 2;$o = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun;$a = New-ScheduledTaskAction -Execute "'%fldr%%A_ScriptName%'";Register-ScheduledTask -TaskName 'FSEM Updater' -Trigger $t -Settings $o -Action $a", , hide
 ;Собственно само скачивание. Так же есть функция скачивания не на рабочий стол, если в файле "%public%\FSEM Updater\Custom folder.ini" прописать путь к другой папке.
 ;Путь прописывать без ковычек и прочего, просто C:\folder\folder2\ Работает только, если такая папка уже существует, иначе качает на рабочий стол (где ему самое место, мне кажется, а то потеряют ещё).
 inipath = %fldr%Custom folder.ini
 FileReadLine, customfldr, %inipath%, 1
-If FileExist(customfldr)
-{
 ;Скачиваем в "%public%\FSEM Updater\" и проверяем, если файл содержит "!DOCTYPE html", то это не наш docx, а страница с ошибкой.
-	UrlDownloadToFile, %fsemlink%, %fldr%\FileCheck.SAO
-	FileRead, checkfile, %fldr%\FileCheck.SAO
-	IfNotInString, checkfile, !DOCTYPE html
+UrlDownloadToFile, %fsemlink%, %fldr%\FileCheck.SAO
+FileRead, checkfile, %fldr%\FileCheck.SAO
+IfNotInString, checkfile, !DOCTYPE html
+	If FileExist(customfldr)
 		FileMove, %fldr%\FileCheck.SAO, %customfldr%\ФСЭМ.docx, 1
-}
-else
-{
-	UrlDownloadToFile, %fsemlink%, %fldr%\FileCheck.SAO
-	FileRead, checkfile, %fldr%\FileCheck.SAO
-	IfNotInString, checkfile, !DOCTYPE html
+	Else
 	{
 		If !FileExist(A_Desktop "\ФСЭМ\")
 			FileCreateDir, %USERPROFILE%\Desktop\ФСЭМ\
 		FileMove, %fldr%\FileCheck.SAO, %USERPROFILE%\Desktop\ФСЭМ\ФСЭМ.docx, 1
 	}
-}
